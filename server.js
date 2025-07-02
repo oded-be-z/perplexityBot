@@ -1196,10 +1196,17 @@ function generateMockPriceData(topic) {
 }
 
 // ======================
+// STATIC FILES (must be before 404 handler)
+// ======================
+
+// Serve static files from public directory
+app.use(express.static('public'));
+
+// ======================
 // ERROR HANDLING MIDDLEWARE (must be last)
 // ======================
 
-// 404 handler
+// 404 handler for API routes
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -1211,9 +1218,6 @@ app.use('*', (req, res) => {
 
 // Global error handler
 app.use(errorHandler);
-
-// Serve static files
-app.use(express.static('public'));
 
 // ======================
 // SERVER STARTUP & SHUTDOWN
