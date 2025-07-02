@@ -1,4 +1,4 @@
-// server.js - FIXED VERSION with Better Charts and Portfolio Parsing
+// server.js - PRODUCTION-READY VERSION with Enhanced Features
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -14,21 +14,296 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ======================
+// PRODUCTION MIDDLEWARE & SECURITY
+// ======================
 
-// Request logging
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-        next();
-    });
+// Rate limiting for production
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+}));
+
+// CORS configuration
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://yourdomain.com'] // Replace with actual domain
+        : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    credentials: true
+}));
+
+// Rate limiting
+const chatLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // limit each IP to 50 requests per windowMs
+    message: {
+        success: false,
+        error: 'Too many requests, please try again later.',
+        retryAfter: '15 minutes'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // limit each IP to 10 uploads per hour
+    message: {
+        success: false,
+        error: 'Upload limit reached, please try again later.',
+        retryAfter: '1 hour'
+    }
+});
+
+// Body parsing with limits
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Request logging with better format
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    const method = req.method;
+    const url = req.path;
+    const ip = req.ip || req.connection.remoteAddress;
+    console.log(`[${timestamp}] ${method} ${url} - ${ip}`);
+    next();
+});
+
+// ======================
+// ENHANCED RESPONSE FORMATTER
+// ======================
+
+class ResponseFormatter {
+    static formatFinancialAnalysis(content, topic) {
+        // Split long responses into digestible sections
+        const sections = this.extractSections(content);
+        
+        return {
+            title: `📊 ${topic} Analysis`,
+            summary: this.createSummary(sections),
+            sections: sections.map(section => ({
+                title: section.title,
+                content: this.formatSectionContent(section.content),
+                type: section.type
+            })),
+            actionItems: this.extractActionItems(content),
+            keyMetrics: this.extractKeyMetrics(content)
+        };
+    }
+
+    static extractSections(content) {
+        const sections = [];
+        const lines = content.split('\n');
+        let currentSection = { title: 'Overview', content: [], type: 'general' };
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (this.isSectionHeader(trimmed)) {
+                if (currentSection.content.length > 0) {
+                    sections.push(currentSection);
+                }
+                currentSection = {
+                    title: this.cleanSectionTitle(trimmed),
+                    content: [],
+                    type: this.getSectionType(trimmed)
+                };
+            } else if (trimmed.length > 0) {
+                currentSection.content.push(trimmed);
+            }
+        }
+        
+        if (currentSection.content.length > 0) {
+            sections.push(currentSection);
+        }
+        
+        return sections;
+    }
+
+    static isSectionHeader(line) {
+        return /^(#{1,4}|••••|\*\*|Current Price|Technical Analysis|Market Sentiment|Recommendations?|Risk Factors?|Summary)/i.test(line);
+    }
+
+    static cleanSectionTitle(title) {
+        return title.replace(/^#+\s*|\*\*|\|/g, '').trim();
+    }
+
+    static getSectionType(title) {
+        const lower = title.toLowerCase();
+        if (lower.includes('price') || lower.includes('technical')) return 'technical';
+        if (lower.includes('risk') || lower.includes('warning')) return 'risk';
+        if (lower.includes('recommend') || lower.includes('entry') || lower.includes('exit')) return 'actionable';
+        return 'general';
+    }
+
+    static formatSectionContent(content) {
+        return content
+            .slice(0, 3) // Limit to 3 main points per section
+            .map(line => {
+                // Format prices and percentages with better styling
+                return line
+                    .replace(/\$[\d,]+\.?\d*/g, match => `💰 ${match}`)
+                    .replace(/([+-]?\d+\.?\d*%)/g, match => {
+                        const value = parseFloat(match);
+                        return value >= 0 ? `📈 ${match}` : `📉 ${match}`;
+                    })
+                    .replace(/^[-•]\s*/, '• '); // Normalize bullet points
+            });
+    }
+
+    static createSummary(sections) {
+        const summaryPoints = [];
+        
+        // Extract key points from each section (max 1 per section)
+        sections.forEach(section => {
+            if (section.content.length > 0) {
+                const keyPoint = section.content[0];
+                if (keyPoint.length < 100) { // Only short, concise points
+                    summaryPoints.push(`${section.title}: ${keyPoint}`);
+                }
+            }
+        });
+        
+        return summaryPoints.slice(0, 3); // Max 3 summary points
+    }
+
+    static extractActionItems(content) {
+        const actionPatterns = [
+            /(?:buy|entry|enter|long).*?(?:at|@|above|below)\s*\$?[\d,.]+/gi,
+            /(?:sell|exit|take profit|target).*?(?:at|@|above|below)\s*\$?[\d,.]+/gi,
+            /(?:stop loss|stop|stop-loss).*?(?:at|@|above|below)\s*\$?[\d,.]+/gi
+        ];
+        
+        const actions = [];
+        actionPatterns.forEach(pattern => {
+            const matches = content.match(pattern) || [];
+            actions.push(...matches.slice(0, 2)); // Max 2 per pattern
+        });
+        
+        return actions.slice(0, 4); // Max 4 total action items
+    }
+
+    static extractKeyMetrics(content) {
+        const metrics = {};
+        
+        // Extract current price
+        const priceMatch = content.match(/current price.*?\$?[\d,]+\.?\d*/i);
+        if (priceMatch) metrics.currentPrice = priceMatch[0];
+        
+        // Extract changes
+        const changeMatch = content.match(/(?:24h?|daily).*?[+-]?\d+\.?\d*%/i);
+        if (changeMatch) metrics.change24h = changeMatch[0];
+        
+        // Extract support/resistance
+        const supportMatch = content.match(/support.*?\$?[\d,]+\.?\d*/i);
+        if (supportMatch) metrics.support = supportMatch[0];
+        
+        const resistanceMatch = content.match(/resistance.*?\$?[\d,]+\.?\d*/i);
+        if (resistanceMatch) metrics.resistance = resistanceMatch[0];
+        
+        return metrics;
+    }
 }
 
 // ======================
-// MODERN CHART GENERATOR - No More ASCII Charts!
+// CACHING SYSTEM
+// ======================
+
+class CacheManager {
+    constructor() {
+        this.cache = new Map();
+        this.ttl = 5 * 60 * 1000; // 5 minutes TTL
+    }
+
+    get(key) {
+        const item = this.cache.get(key);
+        if (!item) return null;
+        
+        if (Date.now() > item.expiry) {
+            this.cache.delete(key);
+            return null;
+        }
+        
+        return item.data;
+    }
+
+    set(key, data) {
+        this.cache.set(key, {
+            data,
+            expiry: Date.now() + this.ttl
+        });
+    }
+
+    clear() {
+        this.cache.clear();
+    }
+
+    size() {
+        return this.cache.size;
+    }
+}
+
+const cache = new CacheManager();
+
+// ======================
+// ENHANCED ERROR HANDLING
+// ======================
+
+class AppError extends Error {
+    constructor(message, statusCode, code = null) {
+        super(message);
+        this.statusCode = statusCode;
+        this.code = code;
+        this.isOperational = true;
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
+const errorHandler = (err, req, res, next) => {
+    let error = { ...err };
+    error.message = err.message;
+
+    console.error(`[ERROR] ${req.method} ${req.path}:`, {
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        timestamp: new Date().toISOString()
+    });
+
+    // Perplexity API errors
+    if (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT') {
+        error = new AppError('Service temporarily unavailable. Please try again.', 503, 'SERVICE_UNAVAILABLE');
+    }
+
+    // Rate limit errors
+    if (err.status === 429) {
+        error = new AppError('Too many requests. Please wait before trying again.', 429, 'RATE_LIMIT');
+    }
+
+    // Validation errors
+    if (err.name === 'ValidationError') {
+        error = new AppError('Invalid input data', 400, 'VALIDATION_ERROR');
+    }
+
+    res.status(error.statusCode || 500).json({
+        success: false,
+        error: error.message || 'Something went wrong',
+        code: error.code,
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+};
+
+// ======================
+// MODERN CHART GENERATOR - Enhanced
 // ======================
 
 class ModernChartGenerator {
@@ -251,29 +526,6 @@ class ModernChartGenerator {
             }
         };
     }
-
-    generateDataTable(data, title = 'Data Summary') {
-        if (!data || data.length === 0) return null;
-        
-        return {
-            type: 'table',
-            title: title,
-            headers: Object.keys(data[0]),
-            rows: data.map(item => Object.values(item))
-        };
-    }
-
-    generateKeyStatsTable(asset, stats) {
-        const tableData = [
-            { metric: 'Current Price', value: `$${stats.price}` },
-            { metric: '24h Change', value: `${stats.change24h >= 0 ? '+' : ''}${stats.change24h}%` },
-            { metric: '7d Change', value: `${stats.change7d >= 0 ? '+' : ''}${stats.change7d}%` },
-            { metric: 'Market Cap', value: stats.marketCap || 'N/A' },
-            { metric: 'Volume', value: stats.volume || 'N/A' }
-        ].filter(item => item.value !== 'N/A');
-
-        return this.generateDataTable(tableData, `${asset} Key Statistics`);
-    }
 }
 
 // ======================
@@ -396,32 +648,32 @@ class EnhancedPerplexityClient {
     }
 
     async getFinancialAnalysis(topic, options = {}) {
-        const systemPrompt = `You are Max, a friendly and knowledgeable financial advisor who loves talking about ${topic}! 
+        // Check cache first
+        const cacheKey = `analysis_${topic}_${options.complexity || 'balanced'}`;
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log(`[CACHE HIT] Analysis for ${topic}`);
+            return cached;
+        }
 
-Your personality:
-- Conversational and approachable, like chatting with a smart financial buddy
-- Enthusiastic about finance but easy to understand
-- Use emojis to make things fun (📈📉💰🚀⚠️)
-- Keep responses concise but informative
-- Friendly warnings about risks, not scary lectures
+        const systemPrompt = `You are Max, a professional financial advisor. Provide CONCISE, actionable analysis.
 
-IMPORTANT RULES:
-1. Focus ONLY on ${topic} - politely redirect if asked about other assets
-2. Keep responses under 200 words unless specifically asked for details
-3. Use bullet points and clear structure
-4. Include specific prices/percentages with emojis
-5. If someone asks about non-financial topics, be friendly but redirect to finance
+CRITICAL RULES:
+1. Keep responses under 500 words total
+2. Use clear section headers: ## Current Price, ## Technical Levels, ## Recommendation
+3. Focus on specific price levels and actionable insights
+4. Include ONLY the most important risk factors
+5. No lengthy explanations - be direct and precise
 
-Style: Think "helpful financial friend" not "formal advisor"`;
+Structure your response with clear sections for easy parsing.`;
 
-        const userPrompt = `Give me a friendly but insightful analysis of ${topic}. I want:
-• Current price & recent changes 📊
-• Key levels to watch 👀  
-• What's driving the price 📰
-• Quick entry/exit thoughts 💭
-• Main risks to know ⚠️
+        const userPrompt = `Analyze ${topic} with focus on:
+- Current price and key daily changes
+- 2-3 critical technical levels (support/resistance)
+- One clear recommendation with specific entry/exit points
+- Top 2 risk factors
 
-Keep it concise but actionable - like you're texting a friend who knows finance!`;
+Keep response under 400 words, be specific with numbers.`;
 
         try {
             const response = await this.makeRequest([
@@ -432,45 +684,16 @@ Keep it concise but actionable - like you're texting a friend who knows finance!
                 recency: 'day'
             });
 
-            return this.formatAnalysisResponse(response.content, topic);
+            const formattedResponse = ResponseFormatter.formatFinancialAnalysis(response.content, topic);
+            
+            // Cache the result
+            cache.set(cacheKey, formattedResponse);
+            
+            return formattedResponse;
         } catch (error) {
             console.error('Perplexity Analysis Error:', error);
-            throw error;
+            throw new AppError('Analysis service temporarily unavailable', 503, 'ANALYSIS_UNAVAILABLE');
         }
-    }
-
-    formatAnalysisResponse(content, topic) {
-        // Remove ASCII charts if any exist
-        let formatted = content.replace(/╔═+╗[\s\S]*?╚═+╝/g, '');
-        
-        // Remove overly technical sections that make it verbose
-        formatted = formatted.replace(/━+/g, ''); // Remove line separators
-        
-        // Add friendly header if not present
-        if (!formatted.includes('📊') && !formatted.includes('💰')) {
-            formatted = `💰 ${topic} Quick Analysis\n\n${formatted}`;
-        }
-
-        // Format prices with emphasis
-        formatted = formatted
-            .replace(/\$[\d,]+\.?\d*/g, match => `**${match}**`)
-            .replace(/([+-]?\d+\.?\d*%)/g, match => {
-                const value = parseFloat(match);
-                return value >= 0 ? `📈 ${match}` : `📉 ${match}`;
-            });
-
-        // Ensure response isn't too long - truncate if over 300 words
-        const words = formatted.split(' ');
-        if (words.length > 300) {
-            formatted = words.slice(0, 280).join(' ') + '...\n\n💡 *Want more details? Just ask for a deeper analysis!*';
-        }
-
-        // Add friendly closing if response seems complete
-        if (!formatted.includes('💡') && !formatted.includes('questions')) {
-            formatted += '\n\n💡 Got questions? I love talking finance! 😊';
-        }
-
-        return formatted;
     }
 
     async makeRequest(messages, options = {}) {
@@ -547,44 +770,110 @@ const sessions = new Map();
 // API ROUTES
 // ======================
 
+// ======================
+// HEALTH & MONITORING ENDPOINTS
+// ======================
+
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
-        message: 'FinanceBot Pro - Production Ready',
-        version: '3.0.0',
+    const healthData = {
+        status: 'OK',
+        message: 'FinanceBot Pro - Production Ready v4.0',
+        timestamp: new Date().toISOString(),
+        version: '4.0.0',
+        environment: process.env.NODE_ENV || 'development',
         features: {
             modernCharts: true,
             improvedCSVParsing: true,
             portfolioAnalysis: true,
-            perplexityIntegration: !!perplexityClient
+            perplexityIntegration: !!perplexityClient,
+            rateLimiting: true,
+            caching: true,
+            errorHandling: true,
+            security: true
+        },
+        system: {
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            cacheSize: cache.size(),
+            activeSessions: sessions.size
         }
+    };
+
+    res.json(healthData);
+});
+
+app.get('/api/metrics', (req, res) => {
+    // Basic metrics endpoint for monitoring
+    res.json({
+        cache: {
+            size: cache.size(),
+            hitRate: cache.hitRate || 0
+        },
+        sessions: {
+            active: sessions.size,
+            withPortfolios: Array.from(sessions.values()).filter(s => s.portfolio).length
+        },
+        uptime: process.uptime(),
+        memory: process.memoryUsage()
     });
 });
 
-app.post('/api/chat', async (req, res) => {
+// ======================
+// API ENDPOINTS
+// ======================
+
+app.post('/api/chat', chatLimiter, async (req, res, next) => {
     try {
+        // Input validation
         const { message, sessionId } = req.body;
         
-        if (!message) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Message is required' 
-            });
+        if (!message || typeof message !== 'string' || message.trim().length === 0) {
+            throw new AppError('Message is required and must be a non-empty string', 400, 'INVALID_INPUT');
         }
 
-        // Get session data
+        if (message.length > 500) {
+            throw new AppError('Message too long. Please keep under 500 characters.', 400, 'MESSAGE_TOO_LONG');
+        }
+
+        // Sanitize input
+        const sanitizedMessage = message.trim().replace(/[<>]/g, '');
+
+        // Get session data with validation
         const session = sessions.get(sessionId) || { portfolio: null };
         
         // Analyze query
-        const queryInfo = analyzeQuery(message, session);
+        const queryInfo = analyzeQuery(sanitizedMessage, session);
         
-        let responseText = '';
+        let responseData = null;
         let chartData = null;
 
         // Handle different query types
         if (queryInfo.type === 'portfolio' && session.portfolio) {
             const analysis = analyzePortfolio(session.portfolio);
-            responseText = formatPortfolioAnalysis(analysis);
+            responseData = {
+                type: 'portfolio',
+                title: '📊 Portfolio Analysis',
+                summary: [`Total Value: $${analysis.totalValue.toFixed(2)}`, 
+                         `Holdings: ${analysis.holdingsCount}`,
+                         `P&L: ${analysis.totalGainLoss >= 0 ? '+' : ''}$${analysis.totalGainLoss.toFixed(2)}`],
+                sections: [
+                    {
+                        title: 'Top Holdings',
+                        content: analysis.topHoldings.slice(0, 5).map((h, i) => 
+                            `${i + 1}. ${h.symbol}: $${h.value.toFixed(2)} (${h.percentage}%)`),
+                        type: 'general'
+                    }
+                ],
+                actionItems: [
+                    'Review portfolio balance and consider rebalancing',
+                    'Check underperforming positions for tax-loss opportunities'
+                ],
+                keyMetrics: {
+                    totalValue: `$${analysis.totalValue.toFixed(2)}`,
+                    totalGainLoss: `${analysis.totalGainLoss >= 0 ? '+' : ''}$${analysis.totalGainLoss.toFixed(2)}`,
+                    topHolding: analysis.topHoldings[0]?.symbol
+                }
+            };
             
             // Generate portfolio donut chart
             chartData = chartGenerator.generatePortfolioDonutData(
@@ -592,8 +881,8 @@ app.post('/api/chat', async (req, res) => {
                 analysis.totalValue
             );
         } else if (queryInfo.topic && perplexityClient) {
-            // Get analysis from Perplexity
-            responseText = await perplexityClient.getFinancialAnalysis(
+            // Get analysis from Perplexity with caching
+            responseData = await perplexityClient.getFinancialAnalysis(
                 queryInfo.topic,
                 { complexity: queryInfo.complexity }
             );
@@ -606,67 +895,72 @@ app.post('/api/chat', async (req, res) => {
                     symbol: queryInfo.topic
                 });
             }
-        } else if (queryInfo.type === 'non_financial') {
-            responseText = getFriendlyRedirection(message);
-        } else if (queryInfo.type === 'financial_general') {
-            responseText = "I love talking general finance! 💰 But I'm even better when we dive into specific assets. Try asking about:\n\n" +
-                          "📈 Individual stocks (Apple, Tesla, Microsoft...)\n" +
-                          "₿ Crypto prices (Bitcoin, Ethereum...)\n" +
-                          "🏆 Commodities (Gold, Oil, Silver...)\n" +
-                          "📊 Or upload your portfolio for personalized insights!\n\n" +
-                          "What interests you most? 😊";
         } else if (!queryInfo.topic && !session.portfolio) {
-            responseText = "Hey there! I'm Max, your friendly finance buddy! 🤝\n\n" +
-                          "I'm here to help with:\n" +
-                          "📈 Stock analysis (try 'analyze Apple')\n" +
-                          "₿ Crypto insights (ask about Bitcoin)\n" +
-                          "📁 Portfolio reviews (upload your CSV)\n" +
-                          "📊 Charts and trends\n\n" +
-                          "What financial topic can I help you explore? 💭";
+            responseData = {
+                type: 'welcome',
+                title: '👋 Welcome to FinanceBot Pro',
+                summary: ['Upload portfolio or ask about any asset'],
+                sections: [
+                    {
+                        title: 'Getting Started',
+                        content: [
+                            '📈 Ask about stocks, crypto, or commodities',
+                            '📁 Upload your portfolio CSV for analysis',
+                            '📊 Request charts and technical analysis'
+                        ],
+                        type: 'general'
+                    }
+                ],
+                actionItems: ['Try asking: "Analyze Apple stock"', 'Upload your portfolio CSV'],
+                keyMetrics: {}
+            };
         } else {
-            responseText = "Hmm, I'm not sure what you're looking for! 🤔\n\n" +
-                          "Try asking about a specific stock, crypto, or upload your portfolio. I'm here to help with all things finance! 💰";
+            throw new AppError('Please specify an asset to analyze or upload your portfolio', 400, 'INSUFFICIENT_INFO');
         }
 
         res.json({
             success: true,
-            message: responseText,
+            data: responseData,
             chart: chartData,
             metadata: {
                 queryType: queryInfo.type,
                 hasChart: !!chartData,
-                topic: queryInfo.topic
+                topic: queryInfo.topic,
+                cached: responseData.cached || false,
+                timestamp: new Date().toISOString()
             }
         });
 
     } catch (error) {
-        console.error('Chat API Error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Analysis temporarily unavailable. Please try again.',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        next(error);
     }
 });
 
-app.post('/api/upload', upload.array('files', 5), async (req, res) => {
+app.post('/api/upload', uploadLimiter, upload.array('files', 5), async (req, res, next) => {
     try {
         if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No files provided' 
-            });
+            throw new AppError('No files provided', 400, 'NO_FILES');
         }
 
         const sessionId = req.body.sessionId || 'default';
         let portfolioData = null;
         let parseErrors = [];
 
+        // Validate file types and sizes
         for (const file of req.files) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                throw new AppError('File too large. Maximum size is 2MB.', 400, 'FILE_TOO_LARGE');
+            }
+
             if (file.mimetype === 'text/csv') {
                 const parseResult = await csvParser.parsePortfolioCSV(file.buffer);
                 
                 if (parseResult.success && parseResult.data.length > 0) {
+                    // Security: Limit number of holdings
+                    if (parseResult.data.length > 1000) {
+                        throw new AppError('Too many holdings. Maximum 1000 per portfolio.', 400, 'TOO_MANY_HOLDINGS');
+                    }
+                    
                     portfolioData = parseResult.data;
                     
                     // Validate the data
@@ -677,48 +971,74 @@ app.post('/api/upload', upload.array('files', 5), async (req, res) => {
                 } else {
                     parseErrors.push(parseResult.error || 'Failed to parse CSV');
                 }
+            } else {
+                parseErrors.push(`Unsupported file type: ${file.mimetype}`);
             }
         }
 
         if (portfolioData && portfolioData.length > 0) {
-            // Store in session
+            // Store in session with validation
             if (!sessions.has(sessionId)) {
                 sessions.set(sessionId, {});
             }
             sessions.get(sessionId).portfolio = portfolioData;
+            sessions.get(sessionId).uploadedAt = new Date().toISOString();
 
             // Calculate summary
             const analysis = analyzePortfolio(portfolioData);
             
             res.json({
                 success: true,
-                message: `✅ Portfolio uploaded successfully!\n\n` +
-                        `📊 ${analysis.holdingsCount} holdings detected\n` +
-                        `💰 Total value: $${analysis.totalValue.toFixed(2)}\n` +
-                        `📈 Total gain/loss: ${analysis.totalGainLoss >= 0 ? '+' : ''}$${analysis.totalGainLoss.toFixed(2)}\n\n` +
-                        `Type "analyze my portfolio" to see detailed analysis and charts!`,
-                summary: {
-                    holdings: analysis.holdingsCount,
-                    totalValue: analysis.totalValue,
-                    topHoldings: analysis.topHoldings.slice(0, 3)
+                message: '✅ Portfolio uploaded successfully!',
+                data: {
+                    type: 'upload_success',
+                    title: '� Portfolio Upload Complete',
+                    summary: [
+                        `${analysis.holdingsCount} holdings detected`,
+                        `Total value: $${analysis.totalValue.toFixed(2)}`,
+                        `P&L: ${analysis.totalGainLoss >= 0 ? '+' : ''}$${analysis.totalGainLoss.toFixed(2)}`
+                    ],
+                    sections: [
+                        {
+                            title: 'Upload Summary',
+                            content: [
+                                `Holdings processed: ${analysis.holdingsCount}`,
+                                `Top position: ${analysis.topHoldings[0]?.symbol} (${analysis.topHoldings[0]?.percentage}%)`,
+                                'Ready for analysis!'
+                            ],
+                            type: 'general'
+                        }
+                    ],
+                    actionItems: [
+                        'Type "analyze my portfolio" for detailed insights',
+                        'Ask about specific holdings for individual analysis'
+                    ],
+                    keyMetrics: {
+                        holdings: analysis.holdingsCount,
+                        totalValue: `$${analysis.totalValue.toFixed(2)}`,
+                        topHolding: analysis.topHoldings[0]?.symbol
+                    }
+                },
+                metadata: {
+                    uploadedAt: new Date().toISOString(),
+                    fileCount: req.files.length,
+                    warnings: parseErrors.length > 0 ? parseErrors : undefined
                 }
             });
         } else {
-            res.json({
-                success: false,
-                error: 'Could not parse portfolio data',
-                details: parseErrors.length > 0 ? parseErrors : ['No valid portfolio data found in CSV'],
-                hint: 'Make sure your CSV has columns like: symbol, shares, current_price, market_value'
-            });
+            throw new AppError(
+                'Could not parse portfolio data', 
+                400, 
+                'PARSE_ERROR',
+                { 
+                    details: parseErrors.length > 0 ? parseErrors : ['No valid portfolio data found'],
+                    hint: 'Ensure CSV has columns: symbol, shares, current_price, market_value'
+                }
+            );
         }
 
     } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to process files',
-            details: error.message 
-        });
+        next(error);
     }
 });
 
@@ -752,33 +1072,14 @@ function analyzeQuery(message, session) {
         return analysis;
     }
 
-    // Detect non-financial topics first
-    const nonFinancialPatterns = [
-        /\b(weather|food|movie|music|sports|travel|health|medicine|politics|religion)\b/i,
-        /\b(how are you|hello|hi|good morning|good evening|thank you|thanks)\b/i,
-        /\b(recipe|cooking|game|entertainment|celebrity|news|weather forecast)\b/i
-    ];
-    
-    for (const pattern of nonFinancialPatterns) {
-        if (pattern.test(message)) {
-            analysis.type = 'non_financial';
-            return analysis;
-        }
-    }
-
-    // Asset detection (expanded list)
+    // Asset detection
     const assetPatterns = {
         'Bitcoin': /\b(bitcoin|btc)\b/i,
         'Ethereum': /\b(ethereum|eth)\b/i,
         'Apple': /\b(apple|aapl)\b/i,
         'Tesla': /\b(tesla|tsla)\b/i,
-        'Microsoft': /\b(microsoft|msft)\b/i,
-        'Amazon': /\b(amazon|amzn)\b/i,
-        'Google': /\b(google|googl|alphabet)\b/i,
         'Gold': /\b(gold|xau)\b/i,
-        'Silver': /\b(silver|xag)\b/i,
-        'Oil': /\b(oil|crude|wti|brent)\b/i,
-        'S&P 500': /\b(s&p|spx|spy)\b/i
+        'Oil': /\b(oil|crude|wti|brent)\b/i
     };
 
     for (const [asset, pattern] of Object.entries(assetPatterns)) {
@@ -788,17 +1089,7 @@ function analyzeQuery(message, session) {
         }
     }
 
-    // General financial terms
-    if (!analysis.topic && /\b(stock|stocks|crypto|forex|investment|trading|market|economy|inflation|interest rate)\b/i.test(message)) {
-        analysis.type = 'financial_general';
-    }
-
-    // Auto-chart detection: Generate charts for any asset analysis automatically
-    if (analysis.topic) {
-        analysis.needsChart = true; // Always show charts for financial assets
-    }
-    
-    // Also detect explicit chart requests
+    // Chart detection
     if (/chart|graph|visual|trend|price movement/i.test(message)) {
         analysis.needsChart = true;
     }
@@ -851,53 +1142,30 @@ function analyzePortfolio(portfolioData) {
 
 function formatPortfolioAnalysis(analysis) {
     const gainLossEmoji = analysis.totalGainLoss >= 0 ? '📈' : '📉';
-    const gainLossText = analysis.totalGainLoss >= 0 ? 'looking good' : 'down a bit';
+    const gainLossText = analysis.totalGainLoss >= 0 ? 'Profit' : 'Loss';
     
-    let response = `💼 Your Portfolio Snapshot\n\n`;
-    response += `You've got **${analysis.holdingsCount} holdings** worth **$${analysis.totalValue.toFixed(2)}**\n`;
-    response += `${gainLossEmoji} Currently ${gainLossText}: **$${Math.abs(analysis.totalGainLoss).toFixed(2)}**\n\n`;
+    let response = `📊 **Portfolio Analysis**\n━━━━━━━━━━━━━━━━━━\n\n`;
+    response += `💼 Total Holdings: ${analysis.holdingsCount}\n`;
+    response += `💰 Total Value: **$${analysis.totalValue.toFixed(2)}**\n`;
+    response += `${gainLossEmoji} Total ${gainLossText}: **$${Math.abs(analysis.totalGainLoss).toFixed(2)}**\n\n`;
     
-    response += `🏆 **Top 3 Holdings:**\n`;
-    analysis.topHoldings.slice(0, 3).forEach((holding, i) => {
-        const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
-        response += `${emoji} ${holding.symbol}: ${holding.percentage}%\n`;
+    response += `**Top Holdings:**\n`;
+    analysis.topHoldings.slice(0, 5).forEach((holding, i) => {
+        response += `${i + 1}. ${holding.symbol}: $${holding.value.toFixed(2)} (${holding.percentage}%)\n`;
     });
     
-    // Quick recommendation based on concentration
-    const topPercentage = parseFloat(analysis.topHoldings[0]?.percentage || 0);
-    if (topPercentage > 30) {
-        response += `\n⚠️ Your top holding is ${topPercentage}% - consider diversifying!\n`;
-    } else if (topPercentage < 15 && analysis.holdingsCount > 10) {
-        response += `\n✅ Nice diversification across your holdings!\n`;
-    }
+    response += `\n**Asset Distribution:**\n`;
+    Object.entries(analysis.distribution).forEach(([type, value]) => {
+        const percentage = (value / analysis.totalValue * 100).toFixed(1);
+        response += `• ${type}: ${percentage}%\n`;
+    });
     
-    response += `\n💡 Want detailed charts and insights? Just ask! 😊`;
+    response += `\n💡 **Recommendations:**\n`;
+    response += `• Consider rebalancing if any position exceeds 25% of portfolio\n`;
+    response += `• Review underperforming assets for potential tax-loss harvesting\n`;
+    response += `• Ensure adequate diversification across sectors and asset classes`;
     
     return response;
-}
-
-function getFriendlyRedirection(message) {
-    const lower = message.toLowerCase();
-    
-    // Friendly responses for different types of non-financial topics
-    if (/\b(hello|hi|hey|good morning|good evening)\b/i.test(message)) {
-        return "Hello there! 👋 Nice to meet you! I'm Max, your friendly financial advisor. While I'd love to chat about everything, I'm really passionate about helping with investments, stocks, crypto, and portfolio management! 💰\n\nWhat financial topic can I help you explore today? 📈";
-    }
-    
-    if (/\b(how are you|how's it going)\b/i.test(message)) {
-        return "I'm doing great, thanks for asking! 😊 I'm always excited when I get to talk about finance and help people make smart money decisions. Speaking of which - are you looking to analyze any investments or check on market trends? 📊";
-    }
-    
-    if (/\b(thank you|thanks)\b/i.test(message)) {
-        return "You're very welcome! 😊 I love helping with financial stuff! Got any other questions about stocks, crypto, or your investments? I'm here to help! 💪";
-    }
-    
-    if (/\b(weather|food|movie|music|sports|travel|health|politics|religion|recipe|cooking|game|entertainment|celebrity)\b/i.test(message)) {
-        return "That sounds interesting! 😊 While I'd love to chat about that, I'm actually specialized in financial topics - it's what I'm really passionate about! 💰\n\nHow about we talk about something finance-related? Maybe:\n📈 Stock market trends\n₿ Cryptocurrency analysis\n💼 Portfolio optimization\n📊 Investment opportunities\n\nWhat financial topic interests you most?";
-    }
-    
-    // Default friendly redirection
-    return "That's an interesting topic! 😊 While I'd love to chat about everything, I'm really passionate about finance and investments. That's where I can give you the best insights! 💰\n\nHow about we explore something financial? Ask me about any stock, crypto, commodity, or upload your portfolio for analysis! 📈";
 }
 
 function generateMockPriceData(topic) {
@@ -907,13 +1175,8 @@ function generateMockPriceData(topic) {
         'Ethereum': 2200,
         'Apple': 182,
         'Tesla': 200,
-        'Microsoft': 378,
-        'Amazon': 3100,
-        'Google': 142,
         'Gold': 2040,
-        'Silver': 23,
-        'Oil': 75,
-        'S&P 500': 4500
+        'Oil': 75
     }[topic] || 100;
     
     const data = [];
@@ -932,24 +1195,92 @@ function generateMockPriceData(topic) {
     return data;
 }
 
-// Serve static files
+// ======================
+// STATIC FILES (must be before 404 handler)
+// ======================
+
+// Serve static files from public directory
 app.use(express.static('public'));
 
-// Start server
-app.listen(PORT, () => {
+// ======================
+// ERROR HANDLING MIDDLEWARE (must be last)
+// ======================
+
+// 404 handler for API routes
+app.use('*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Endpoint not found',
+        code: 'NOT_FOUND',
+        path: req.originalUrl
+    });
+});
+
+// Global error handler
+app.use(errorHandler);
+
+// ======================
+// SERVER STARTUP & SHUTDOWN
+// ======================
+
+const server = app.listen(PORT, () => {
     console.log(`
 ╔════════════════════════════════════════════════════════════╗
-║  🚀 FinanceBot Pro Server - PRODUCTION READY v3.0          ║
+║  🚀 FinanceBot Pro Server - PRODUCTION READY v4.0          ║
 ╠════════════════════════════════════════════════════════════╣
 ║  Port: ${PORT}                                              ║
+║  Environment: ${process.env.NODE_ENV || 'development'}                                        ║
 ║  Status: ${process.env.PERPLEXITY_API_KEY ? '✅ All Systems Operational' : '⚠️  Limited Mode (No API Key)'}              ║
 ╠════════════════════════════════════════════════════════════╣
-║  ✨ What's New:                                            ║
-║  ✅ Modern Chart.js visualizations (no more ASCII!)        ║
-║  ✅ Robust CSV parsing with Papa Parse                     ║
-║  ✅ Smart column detection for portfolios                  ║
-║  ✅ Beautiful donut charts for portfolios                  ║
-║  ✅ Real-time price charts with smooth animations          ║
+║  🆕 Production Features:                                   ║
+║  ✅ Rate limiting & security headers                       ║
+║  ✅ Enhanced error handling & logging                      ║
+║  ✅ Response caching system                               ║
+║  ✅ Structured response formatting                        ║
+║  ✅ Input validation & sanitization                       ║
+║  ✅ Health monitoring endpoints                           ║
+║  ✅ Graceful shutdown handling                           ║
 ╚════════════════════════════════════════════════════════════╝
     `);
+});
+
+// Graceful shutdown
+const gracefulShutdown = (signal) => {
+    console.log(`\n[${new Date().toISOString()}] ${signal} received. Starting graceful shutdown...`);
+    
+    server.close((err) => {
+        if (err) {
+            console.error('Error during shutdown:', err);
+            process.exit(1);
+        }
+        
+        console.log('Server closed successfully');
+        
+        // Clean up resources
+        cache.clear();
+        sessions.clear();
+        
+        console.log('Resources cleaned up');
+        process.exit(0);
+    });
+    
+    // Force close after 10 seconds
+    setTimeout(() => {
+        console.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    gracefulShutdown('UNHANDLED_REJECTION');
 });

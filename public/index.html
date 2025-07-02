@@ -1169,8 +1169,9 @@
                 hideTypingIndicator();
                 
                 if (data.success) {
-                    // Add bot message
-                    addMessage(data.message, 'bot', {
+                    // Handle new structured response format
+                    const responseData = data.data || {};
+                    addStructuredMessage(responseData, {
                         chart: data.chart,
                         metadata: data.metadata
                     });
@@ -1238,6 +1239,127 @@
             
             // Scroll to bottom
             container.scrollTop = container.scrollHeight;
+        }
+
+        function addStructuredMessage(data, options = {}) {
+            const container = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.className = 'message-wrapper';
+            
+            // Add avatar
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'message-avatar';
+            avatarDiv.textContent = '🤖';
+            wrapperDiv.appendChild(avatarDiv);
+            
+            // Add structured content
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Build structured response
+            let html = '';
+            
+            // Title
+            if (data.title) {
+                html += `<h3 style="margin-bottom: 12px; color: var(--primary-gold);">${data.title}</h3>`;
+            }
+            
+            // Summary (key points)
+            if (data.summary && data.summary.length > 0) {
+                html += '<div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 3px solid var(--info);">';
+                html += '<strong style="color: var(--info);">📋 Quick Summary</strong><br>';
+                data.summary.forEach(point => {
+                    html += `• ${point}<br>`;
+                });
+                html += '</div>';
+            }
+            
+            // Key metrics (highlighted)
+            if (data.keyMetrics && Object.keys(data.keyMetrics).length > 0) {
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;">';
+                Object.entries(data.keyMetrics).forEach(([key, value]) => {
+                    if (value) {
+                        html += `
+                            <div style="background: var(--tertiary-dark); padding: 8px; border-radius: 6px; text-align: center; border: 1px solid var(--border-color);">
+                                <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">${key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                                <div style="font-weight: 600; color: var(--primary-gold);">${value}</div>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div>';
+            }
+            
+            // Sections (detailed analysis)
+            if (data.sections && data.sections.length > 0) {
+                data.sections.forEach(section => {
+                    const sectionIcon = getSectionIcon(section.type);
+                    html += `<div style="margin-bottom: 16px;">`;
+                    html += `<h4 style="color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;"><span>${sectionIcon}</span> ${section.title}</h4>`;
+                    
+                    if (section.content && section.content.length > 0) {
+                        html += '<ul style="margin-left: 16px; color: var(--text-secondary);">';
+                        section.content.forEach(item => {
+                            html += `<li style="margin-bottom: 4px;">${formatContent(item)}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</div>';
+                });
+            }
+            
+            // Action items (what to do next)
+            if (data.actionItems && data.actionItems.length > 0) {
+                html += '<div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; margin-top: 16px; border-left: 3px solid var(--success);">';
+                html += '<strong style="color: var(--success);">🎯 Recommended Actions</strong><br>';
+                data.actionItems.slice(0, 3).forEach(action => { // Limit to 3 actions
+                    html += `• ${action}<br>`;
+                });
+                html += '</div>';
+            }
+            
+            contentDiv.innerHTML = html;
+            
+            // Add chart if provided
+            if (options.chart) {
+                renderChart(contentDiv, options.chart);
+            }
+            
+            wrapperDiv.appendChild(contentDiv);
+            messageDiv.appendChild(wrapperDiv);
+            container.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getSectionIcon(type) {
+            const icons = {
+                'technical': '📊',
+                'risk': '⚠️',
+                'actionable': '🎯',
+                'general': '📋',
+                'portfolio': '💼'
+            };
+            return icons[type] || '📋';
+        }
+
+        function formatContent(content) {
+            // Format prices
+            content = content.replace(/\$[\d,]+\.?\d*/g, '<span style="color: var(--primary-gold); font-weight: 600;">$&</span>');
+            
+            // Format percentages
+            content = content.replace(/([+-]?\d+\.?\d*%)/g, (match) => {
+                const isPositive = match.startsWith('+') || (!match.startsWith('-') && parseFloat(match) > 0);
+                const color = isPositive ? 'var(--success)' : 'var(--danger)';
+                const icon = isPositive ? '📈' : '📉';
+                return `<span style="color: ${color}; font-weight: 600;">${icon} ${match}</span>`;
+            });
+            
+            return content;
         }
 
         function formatBotMessage(content) {
@@ -1497,8 +1619,15 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Show success message
-                    addMessage(data.message, 'bot');
+                    // Handle new structured upload response
+                    if (data.data) {
+                        addStructuredMessage(data.data, {
+                            metadata: data.metadata
+                        });
+                    } else {
+                        // Fallback for old format
+                        addMessage(data.message, 'bot');
+                    }
                 } else {
                     // Show error with details
                     let errorMsg = '❌ ' + data.error;
