@@ -1268,51 +1268,166 @@
             return content;
         }
 
-        function renderChart(container, chartData) {
-            if (!chartData) return;
+        function renderTable(container, tableData) {
+            if (!tableData || !tableData.headers || !tableData.rows) {
+                console.log('Invalid table data');
+                return;
+            }
+
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'data-table';
             
-            // Create chart container
+            // Add table title if available
+            if (tableData.title) {
+                const titleDiv = document.createElement('div');
+                titleDiv.style.cssText = 'text-align: center; font-weight: 600; margin-bottom: 15px; color: var(--primary-gold); font-size: 16px; padding: 10px;';
+                titleDiv.textContent = tableData.title;
+                tableContainer.appendChild(titleDiv);
+            }
+
+            const table = document.createElement('table');
+            
+            // Create header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            tableData.headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.charAt(0).toUpperCase() + header.slice(1);
+                th.style.cssText = 'background: var(--tertiary-dark); color: var(--primary-gold); padding: 12px; border-bottom: 2px solid var(--border-color);';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Create body
+            const tbody = document.createElement('tbody');
+            tableData.rows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.style.cssText = index % 2 === 0 ? 'background: var(--secondary-dark);' : 'background: var(--tertiary-dark);';
+                
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    td.style.cssText = 'padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-primary);';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            
+            table.style.cssText = 'width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden;';
+            tableContainer.appendChild(table);
+            container.appendChild(tableContainer);
+        }
+
+        function renderChart(container, chartData) {
+            if (!chartData) {
+                console.log('No chart data provided');
+                return;
+            }
+
+            // Handle tables differently than charts
+            if (chartData.type === 'table') {
+                renderTable(container, chartData);
+                return;
+            }
+
+            if (!chartData.data) {
+                console.log('No chart data provided');
+                return;
+            }
+            
+            // Create chart container with title
             const chartContainer = document.createElement('div');
             chartContainer.className = 'chart-container';
             
-            // Create canvas
+            // Add chart title if available
+            if (chartData.title) {
+                const titleDiv = document.createElement('div');
+                titleDiv.style.cssText = 'text-align: center; font-weight: 600; margin-bottom: 15px; color: var(--primary-gold); font-size: 16px;';
+                titleDiv.textContent = chartData.title;
+                chartContainer.appendChild(titleDiv);
+            }
+            
+            // Create canvas with proper sizing
             const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'max-height: 400px; width: 100%;';
             chartContainer.appendChild(canvas);
             container.appendChild(chartContainer);
             
-            // Destroy old chart if exists
-            if (activeCharts.length > 10) {
+            // Cleanup old charts if too many
+            if (activeCharts.length > 5) {
                 const oldChart = activeCharts.shift();
-                oldChart.destroy();
+                if (oldChart) oldChart.destroy();
             }
             
-            // Create new chart
-            const ctx = canvas.getContext('2d');
-            const chart = new Chart(ctx, {
-                type: chartData.type || 'line',
-                data: chartData.data,
-                options: chartData.options || {
+            try {
+                // Create new chart with improved options
+                const ctx = canvas.getContext('2d');
+                
+                // Default chart options with proper theming
+                const defaultOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
                         legend: {
-                            labels: { color: 'var(--text-primary)' }
+                            display: true,
+                            position: 'top',
+                            labels: { 
+                                color: '#e0e6ed',
+                                font: { size: 12 },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 20, 32, 0.9)',
+                            titleColor: '#FFD700',
+                            bodyColor: '#e0e6ed',
+                            borderColor: '#FFD700',
+                            borderWidth: 1
                         }
                     },
-                    scales: {
+                    scales: chartData.type !== 'doughnut' && chartData.type !== 'pie' ? {
                         x: {
-                            ticks: { color: 'var(--text-secondary)' },
-                            grid: { color: 'var(--border-color)' }
+                            ticks: { color: '#9ca3af', font: { size: 10 } },
+                            grid: { color: '#2a3142' },
+                            border: { color: '#2a3142' }
                         },
                         y: {
-                            ticks: { color: 'var(--text-secondary)' },
-                            grid: { color: 'var(--border-color)' }
+                            ticks: { color: '#9ca3af', font: { size: 10 } },
+                            grid: { color: '#2a3142' },
+                            border: { color: '#2a3142' }
                         }
-                    }
-                }
-            });
-            
-            activeCharts.push(chart);
+                    } : {}
+                };
+                
+                // Merge with provided options
+                const finalOptions = chartData.options ? 
+                    { ...defaultOptions, ...chartData.options } : defaultOptions;
+                
+                const chart = new Chart(ctx, {
+                    type: chartData.type || 'line',
+                    data: chartData.data,
+                    options: finalOptions
+                });
+                
+                activeCharts.push(chart);
+                console.log('Chart rendered successfully:', chartData.title || chartData.type);
+                
+            } catch (error) {
+                console.error('Error rendering chart:', error);
+                // Show error message in chart container
+                chartContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--danger);">
+                        📊 Chart temporarily unavailable
+                        <br><small>Error: ${error.message}</small>
+                    </div>
+                `;
+            }
         }
 
         function showTypingIndicator() {

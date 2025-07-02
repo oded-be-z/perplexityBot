@@ -251,6 +251,29 @@ class ModernChartGenerator {
             }
         };
     }
+
+    generateDataTable(data, title = 'Data Summary') {
+        if (!data || data.length === 0) return null;
+        
+        return {
+            type: 'table',
+            title: title,
+            headers: Object.keys(data[0]),
+            rows: data.map(item => Object.values(item))
+        };
+    }
+
+    generateKeyStatsTable(asset, stats) {
+        const tableData = [
+            { metric: 'Current Price', value: `$${stats.price}` },
+            { metric: '24h Change', value: `${stats.change24h >= 0 ? '+' : ''}${stats.change24h}%` },
+            { metric: '7d Change', value: `${stats.change7d >= 0 ? '+' : ''}${stats.change7d}%` },
+            { metric: 'Market Cap', value: stats.marketCap || 'N/A' },
+            { metric: 'Volume', value: stats.volume || 'N/A' }
+        ].filter(item => item.value !== 'N/A');
+
+        return this.generateDataTable(tableData, `${asset} Key Statistics`);
+    }
 }
 
 // ======================
@@ -373,25 +396,32 @@ class EnhancedPerplexityClient {
     }
 
     async getFinancialAnalysis(topic, options = {}) {
-        const systemPrompt = `You are Max, a professional financial advisor specializing in ${topic}.
+        const systemPrompt = `You are Max, a friendly and knowledgeable financial advisor who loves talking about ${topic}! 
+
+Your personality:
+- Conversational and approachable, like chatting with a smart financial buddy
+- Enthusiastic about finance but easy to understand
+- Use emojis to make things fun (📈📉💰🚀⚠️)
+- Keep responses concise but informative
+- Friendly warnings about risks, not scary lectures
 
 IMPORTANT RULES:
-1. ONLY discuss ${topic} - do not mention other assets
-2. Provide specific prices, percentages, and data points
-3. Include technical analysis when relevant
-4. Format response for clarity with sections
-5. Always cite data sources when available
+1. Focus ONLY on ${topic} - politely redirect if asked about other assets
+2. Keep responses under 200 words unless specifically asked for details
+3. Use bullet points and clear structure
+4. Include specific prices/percentages with emojis
+5. If someone asks about non-financial topics, be friendly but redirect to finance
 
-Focus on providing actionable insights with current market data.`;
+Style: Think "helpful financial friend" not "formal advisor"`;
 
-        const userPrompt = `Provide comprehensive analysis of ${topic} including:
-- Current price and 24h/7d changes
-- Key technical levels (support/resistance)
-- Market sentiment and trends
-- Entry/exit recommendations
-- Risk factors to consider
+        const userPrompt = `Give me a friendly but insightful analysis of ${topic}. I want:
+• Current price & recent changes 📊
+• Key levels to watch 👀  
+• What's driving the price 📰
+• Quick entry/exit thoughts 💭
+• Main risks to know ⚠️
 
-Be specific with numbers and price levels.`;
+Keep it concise but actionable - like you're texting a friend who knows finance!`;
 
         try {
             const response = await this.makeRequest([
@@ -413,18 +443,32 @@ Be specific with numbers and price levels.`;
         // Remove ASCII charts if any exist
         let formatted = content.replace(/╔═+╗[\s\S]*?╚═+╝/g, '');
         
-        // Add structured sections
-        if (!formatted.includes('📊')) {
-            formatted = `📊 ${topic} Analysis\n━━━━━━━━━━━━━━━━━━\n\n${formatted}`;
+        // Remove overly technical sections that make it verbose
+        formatted = formatted.replace(/━+/g, ''); // Remove line separators
+        
+        // Add friendly header if not present
+        if (!formatted.includes('📊') && !formatted.includes('💰')) {
+            formatted = `💰 ${topic} Quick Analysis\n\n${formatted}`;
         }
 
-        // Format prices and percentages
+        // Format prices with emphasis
         formatted = formatted
             .replace(/\$[\d,]+\.?\d*/g, match => `**${match}**`)
             .replace(/([+-]?\d+\.?\d*%)/g, match => {
                 const value = parseFloat(match);
                 return value >= 0 ? `📈 ${match}` : `📉 ${match}`;
             });
+
+        // Ensure response isn't too long - truncate if over 300 words
+        const words = formatted.split(' ');
+        if (words.length > 300) {
+            formatted = words.slice(0, 280).join(' ') + '...\n\n💡 *Want more details? Just ask for a deeper analysis!*';
+        }
+
+        // Add friendly closing if response seems complete
+        if (!formatted.includes('💡') && !formatted.includes('questions')) {
+            formatted += '\n\n💡 Got questions? I love talking finance! 😊';
+        }
 
         return formatted;
     }
@@ -562,14 +606,26 @@ app.post('/api/chat', async (req, res) => {
                     symbol: queryInfo.topic
                 });
             }
+        } else if (queryInfo.type === 'non_financial') {
+            responseText = getFriendlyRedirection(message);
+        } else if (queryInfo.type === 'financial_general') {
+            responseText = "I love talking general finance! 💰 But I'm even better when we dive into specific assets. Try asking about:\n\n" +
+                          "📈 Individual stocks (Apple, Tesla, Microsoft...)\n" +
+                          "₿ Crypto prices (Bitcoin, Ethereum...)\n" +
+                          "🏆 Commodities (Gold, Oil, Silver...)\n" +
+                          "📊 Or upload your portfolio for personalized insights!\n\n" +
+                          "What interests you most? 😊";
         } else if (!queryInfo.topic && !session.portfolio) {
-            responseText = "I'd be happy to help! You can:\n\n" +
-                          "📈 Ask about any stock, crypto, or commodity (e.g., 'Analyze Apple stock')\n" +
-                          "📁 Upload your portfolio CSV for personalized analysis\n" +
-                          "📊 Request charts for any asset (e.g., 'Show me Bitcoin price chart')\n\n" +
-                          "What would you like to explore?";
+            responseText = "Hey there! I'm Max, your friendly finance buddy! 🤝\n\n" +
+                          "I'm here to help with:\n" +
+                          "📈 Stock analysis (try 'analyze Apple')\n" +
+                          "₿ Crypto insights (ask about Bitcoin)\n" +
+                          "📁 Portfolio reviews (upload your CSV)\n" +
+                          "📊 Charts and trends\n\n" +
+                          "What financial topic can I help you explore? 💭";
         } else {
-            responseText = "Please specify which asset you'd like to analyze, or upload your portfolio for a comprehensive review.";
+            responseText = "Hmm, I'm not sure what you're looking for! 🤔\n\n" +
+                          "Try asking about a specific stock, crypto, or upload your portfolio. I'm here to help with all things finance! 💰";
         }
 
         res.json({
@@ -696,14 +752,33 @@ function analyzeQuery(message, session) {
         return analysis;
     }
 
-    // Asset detection
+    // Detect non-financial topics first
+    const nonFinancialPatterns = [
+        /\b(weather|food|movie|music|sports|travel|health|medicine|politics|religion)\b/i,
+        /\b(how are you|hello|hi|good morning|good evening|thank you|thanks)\b/i,
+        /\b(recipe|cooking|game|entertainment|celebrity|news|weather forecast)\b/i
+    ];
+    
+    for (const pattern of nonFinancialPatterns) {
+        if (pattern.test(message)) {
+            analysis.type = 'non_financial';
+            return analysis;
+        }
+    }
+
+    // Asset detection (expanded list)
     const assetPatterns = {
         'Bitcoin': /\b(bitcoin|btc)\b/i,
         'Ethereum': /\b(ethereum|eth)\b/i,
         'Apple': /\b(apple|aapl)\b/i,
         'Tesla': /\b(tesla|tsla)\b/i,
+        'Microsoft': /\b(microsoft|msft)\b/i,
+        'Amazon': /\b(amazon|amzn)\b/i,
+        'Google': /\b(google|googl|alphabet)\b/i,
         'Gold': /\b(gold|xau)\b/i,
-        'Oil': /\b(oil|crude|wti|brent)\b/i
+        'Silver': /\b(silver|xag)\b/i,
+        'Oil': /\b(oil|crude|wti|brent)\b/i,
+        'S&P 500': /\b(s&p|spx|spy)\b/i
     };
 
     for (const [asset, pattern] of Object.entries(assetPatterns)) {
@@ -713,7 +788,17 @@ function analyzeQuery(message, session) {
         }
     }
 
-    // Chart detection
+    // General financial terms
+    if (!analysis.topic && /\b(stock|stocks|crypto|forex|investment|trading|market|economy|inflation|interest rate)\b/i.test(message)) {
+        analysis.type = 'financial_general';
+    }
+
+    // Auto-chart detection: Generate charts for any asset analysis automatically
+    if (analysis.topic) {
+        analysis.needsChart = true; // Always show charts for financial assets
+    }
+    
+    // Also detect explicit chart requests
     if (/chart|graph|visual|trend|price movement/i.test(message)) {
         analysis.needsChart = true;
     }
@@ -766,30 +851,53 @@ function analyzePortfolio(portfolioData) {
 
 function formatPortfolioAnalysis(analysis) {
     const gainLossEmoji = analysis.totalGainLoss >= 0 ? '📈' : '📉';
-    const gainLossText = analysis.totalGainLoss >= 0 ? 'Profit' : 'Loss';
+    const gainLossText = analysis.totalGainLoss >= 0 ? 'looking good' : 'down a bit';
     
-    let response = `📊 **Portfolio Analysis**\n━━━━━━━━━━━━━━━━━━\n\n`;
-    response += `💼 Total Holdings: ${analysis.holdingsCount}\n`;
-    response += `💰 Total Value: **$${analysis.totalValue.toFixed(2)}**\n`;
-    response += `${gainLossEmoji} Total ${gainLossText}: **$${Math.abs(analysis.totalGainLoss).toFixed(2)}**\n\n`;
+    let response = `💼 Your Portfolio Snapshot\n\n`;
+    response += `You've got **${analysis.holdingsCount} holdings** worth **$${analysis.totalValue.toFixed(2)}**\n`;
+    response += `${gainLossEmoji} Currently ${gainLossText}: **$${Math.abs(analysis.totalGainLoss).toFixed(2)}**\n\n`;
     
-    response += `**Top Holdings:**\n`;
-    analysis.topHoldings.slice(0, 5).forEach((holding, i) => {
-        response += `${i + 1}. ${holding.symbol}: $${holding.value.toFixed(2)} (${holding.percentage}%)\n`;
+    response += `🏆 **Top 3 Holdings:**\n`;
+    analysis.topHoldings.slice(0, 3).forEach((holding, i) => {
+        const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+        response += `${emoji} ${holding.symbol}: ${holding.percentage}%\n`;
     });
     
-    response += `\n**Asset Distribution:**\n`;
-    Object.entries(analysis.distribution).forEach(([type, value]) => {
-        const percentage = (value / analysis.totalValue * 100).toFixed(1);
-        response += `• ${type}: ${percentage}%\n`;
-    });
+    // Quick recommendation based on concentration
+    const topPercentage = parseFloat(analysis.topHoldings[0]?.percentage || 0);
+    if (topPercentage > 30) {
+        response += `\n⚠️ Your top holding is ${topPercentage}% - consider diversifying!\n`;
+    } else if (topPercentage < 15 && analysis.holdingsCount > 10) {
+        response += `\n✅ Nice diversification across your holdings!\n`;
+    }
     
-    response += `\n💡 **Recommendations:**\n`;
-    response += `• Consider rebalancing if any position exceeds 25% of portfolio\n`;
-    response += `• Review underperforming assets for potential tax-loss harvesting\n`;
-    response += `• Ensure adequate diversification across sectors and asset classes`;
+    response += `\n💡 Want detailed charts and insights? Just ask! 😊`;
     
     return response;
+}
+
+function getFriendlyRedirection(message) {
+    const lower = message.toLowerCase();
+    
+    // Friendly responses for different types of non-financial topics
+    if (/\b(hello|hi|hey|good morning|good evening)\b/i.test(message)) {
+        return "Hello there! 👋 Nice to meet you! I'm Max, your friendly financial advisor. While I'd love to chat about everything, I'm really passionate about helping with investments, stocks, crypto, and portfolio management! 💰\n\nWhat financial topic can I help you explore today? 📈";
+    }
+    
+    if (/\b(how are you|how's it going)\b/i.test(message)) {
+        return "I'm doing great, thanks for asking! 😊 I'm always excited when I get to talk about finance and help people make smart money decisions. Speaking of which - are you looking to analyze any investments or check on market trends? 📊";
+    }
+    
+    if (/\b(thank you|thanks)\b/i.test(message)) {
+        return "You're very welcome! 😊 I love helping with financial stuff! Got any other questions about stocks, crypto, or your investments? I'm here to help! 💪";
+    }
+    
+    if (/\b(weather|food|movie|music|sports|travel|health|politics|religion|recipe|cooking|game|entertainment|celebrity)\b/i.test(message)) {
+        return "That sounds interesting! 😊 While I'd love to chat about that, I'm actually specialized in financial topics - it's what I'm really passionate about! 💰\n\nHow about we talk about something finance-related? Maybe:\n📈 Stock market trends\n₿ Cryptocurrency analysis\n💼 Portfolio optimization\n📊 Investment opportunities\n\nWhat financial topic interests you most?";
+    }
+    
+    // Default friendly redirection
+    return "That's an interesting topic! 😊 While I'd love to chat about everything, I'm really passionate about finance and investments. That's where I can give you the best insights! 💰\n\nHow about we explore something financial? Ask me about any stock, crypto, commodity, or upload your portfolio for analysis! 📈";
 }
 
 function generateMockPriceData(topic) {
@@ -799,8 +907,13 @@ function generateMockPriceData(topic) {
         'Ethereum': 2200,
         'Apple': 182,
         'Tesla': 200,
+        'Microsoft': 378,
+        'Amazon': 3100,
+        'Google': 142,
         'Gold': 2040,
-        'Oil': 75
+        'Silver': 23,
+        'Oil': 75,
+        'S&P 500': 4500
     }[topic] || 100;
     
     const data = [];
