@@ -1,0 +1,53 @@
+╔════════════════════════════════════════════════════════════╗
+║             FINANCEBOT PRO - TEST REPORT                  ║
+╠════════════════════════════════════════════════════════════╣
+║  Date: 7/2/2025, 4:24:43 PM                             ║
+║  Duration: 73633ms                                     ║
+╠════════════════════════════════════════════════════════════╣
+║                        SUMMARY                             ║
+╠════════════════════════════════════════════════════════════╣
+║  Total Tests: 80                                         ║
+║  Passed: 66                                              ║
+║  Failed: 14                                              ║
+║  Success Rate: 82.50%                                  ║
+╠════════════════════════════════════════════════════════════╣
+║                     BY CATEGORY                            ║
+╚════════════════════════════════════════════════════════════╝
+Server Health Check: 1/1 (100.00%)
+Portfolio Analysis Feature: 1/1 (100.00%)
+Perplexity Integration: 1/1 (100.00%)
+Rate Limiting: 1/1 (100.00%)
+Caching System: 1/1 (100.00%)
+Error Handling: 5/5 (100.00%)
+Security Features: 1/1 (100.00%)
+Session Initialization: 1/1 (100.00%)
+Metrics Endpoint: 1/1 (100.00%)
+Asset Detection: 9/14 (64.29%)
+Guardrail: 9/10 (90.00%)
+Chart Generation: 5/5 (100.00%)
+Portfolio Analysis Query: 0/1 (0.00%)
+General Financial: 10/10 (100.00%)
+Fuzzy Match: 3/5 (60.00%)
+Complexity Detection: 1/6 (16.67%)
+Rate Limiting Protection: 1/1 (100.00%)
+Performance: 4/4 (100.00%)
+Response Structure - Title: 1/1 (100.00%)
+Response Structure - Summary: 1/1 (100.00%)
+Response Structure - Sections: 1/1 (100.00%)
+Response Structure - Action Items: 1/1 (100.00%)
+Response Structure - Key Metrics: 1/1 (100.00%)
+Chart Structure - Type: 1/1 (100.00%)
+Chart Structure - Title: 1/1 (100.00%)
+Chart Structure - Data: 1/1 (100.00%)
+Metadata Structure - Query Type: 1/1 (100.00%)
+Metadata Structure - Has Chart: 1/1 (100.00%)
+Metadata Structure - Timestamp: 1/1 (100.00%)
+
+📋 RECOMMENDATIONS:
+⚠️ 14 tests failed. Review the following areas:
+   • Asset Detection: 5 failed tests
+   • Guardrail: 1 failed tests
+   • Portfolio Analysis Query: 1 failed tests
+   • Fuzzy Match: 2 failed tests
+   • Complexity Detection: 5 failed tests
+⚠️ Moderate success rate - investigate failed tests

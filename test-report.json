@@ -1,0 +1,981 @@
+{
+  "testSuite": "FinanceBot Pro - Comprehensive End-to-End Tests",
+  "timestamp": "2025-07-02T13:24:43.513Z",
+  "duration": "73633ms",
+  "summary": {
+    "totalTests": 80,
+    "passed": 66,
+    "failed": 14,
+    "successRate": "82.50%"
+  },
+  "categories": {
+    "Server Health Check": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Portfolio Analysis Feature": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Perplexity Integration": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Rate Limiting": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Caching System": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Error Handling": {
+      "passed": 5,
+      "failed": 0,
+      "total": 5,
+      "successRate": "100.00%"
+    },
+    "Security Features": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Session Initialization": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Metrics Endpoint": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Asset Detection": {
+      "passed": 9,
+      "failed": 5,
+      "total": 14,
+      "successRate": "64.29%"
+    },
+    "Guardrail": {
+      "passed": 9,
+      "failed": 1,
+      "total": 10,
+      "successRate": "90.00%"
+    },
+    "Chart Generation": {
+      "passed": 5,
+      "failed": 0,
+      "total": 5,
+      "successRate": "100.00%"
+    },
+    "Portfolio Analysis Query": {
+      "passed": 0,
+      "failed": 1,
+      "total": 1,
+      "successRate": "0.00%"
+    },
+    "General Financial": {
+      "passed": 10,
+      "failed": 0,
+      "total": 10,
+      "successRate": "100.00%"
+    },
+    "Fuzzy Match": {
+      "passed": 3,
+      "failed": 2,
+      "total": 5,
+      "successRate": "60.00%"
+    },
+    "Complexity Detection": {
+      "passed": 1,
+      "failed": 5,
+      "total": 6,
+      "successRate": "16.67%"
+    },
+    "Rate Limiting Protection": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Performance": {
+      "passed": 4,
+      "failed": 0,
+      "total": 4,
+      "successRate": "100.00%"
+    },
+    "Response Structure - Title": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Response Structure - Summary": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Response Structure - Sections": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Response Structure - Action Items": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Response Structure - Key Metrics": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Chart Structure - Type": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Chart Structure - Title": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Chart Structure - Data": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Metadata Structure - Query Type": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Metadata Structure - Has Chart": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    },
+    "Metadata Structure - Timestamp": {
+      "passed": 1,
+      "failed": 0,
+      "total": 1,
+      "successRate": "100.00%"
+    }
+  },
+  "detailedResults": [
+    {
+      "testName": "Server Health Check",
+      "passed": true,
+      "details": {
+        "statusCode": 200,
+        "serverStatus": "healthy"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Portfolio Analysis Feature",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Perplexity Integration",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Rate Limiting",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Caching System",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Error Handling",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Security Features",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.962Z"
+    },
+    {
+      "testName": "Session Initialization",
+      "passed": true,
+      "details": {
+        "sessionId": "session_1751462609964_1gpwqtoz0"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.965Z"
+    },
+    {
+      "testName": "Metrics Endpoint",
+      "passed": true,
+      "details": {
+        "metrics": {
+          "cache": {
+            "size": 3,
+            "hitRate": 0
+          },
+          "sessions": {
+            "active": 1,
+            "withPortfolios": 0
+          },
+          "uptime": 37.1553526,
+          "memory": {
+            "rss": 61984768,
+            "heapTotal": 14516224,
+            "heapUsed": 12715872,
+            "external": 3647803,
+            "arrayBuffers": 144537
+          }
+        }
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:29.967Z"
+    },
+    {
+      "testName": "Asset Detection: Apple stock analysis",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Apple",
+        "detectedTitle": "📊 Apple Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:34.133Z"
+    },
+    {
+      "testName": "Asset Detection: Microsoft performance",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Microsoft",
+        "detectedTitle": "📊 Microsoft Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:37.214Z"
+    },
+    {
+      "testName": "Asset Detection: AAPL price",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Apple",
+        "detectedTitle": "📊 Apple Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:37.330Z"
+    },
+    {
+      "testName": "Asset Detection: TSLA trends",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Tesla",
+        "detectedTitle": "📊 Tesla Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:40.112Z"
+    },
+    {
+      "testName": "Asset Detection: Bitcoin analysis",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Bitcoin",
+        "detectedTitle": "📊 Bitcoin Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:43.257Z"
+    },
+    {
+      "testName": "Asset Detection: BTC price",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Bitcoin",
+        "detectedTitle": "📊 Bitcoin Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:43.371Z"
+    },
+    {
+      "testName": "Asset Detection: Ethereum trends",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Ethereum",
+        "detectedTitle": "📊 Ethereum Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:46.564Z"
+    },
+    {
+      "testName": "Asset Detection: ETH analysis",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Ethereum",
+        "detectedTitle": "📊 Ethereum Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:46.683Z"
+    },
+    {
+      "testName": "Asset Detection: Gold price analysis",
+      "passed": true,
+      "details": {
+        "expectedAsset": "Gold",
+        "detectedTitle": "📊 Gold Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:50.656Z"
+    },
+    {
+      "testName": "Asset Detection: Oil market trends",
+      "passed": false,
+      "details": {
+        "expectedAsset": "Oil",
+        "detectedTitle": "📊 Current Market Trends Analysis",
+        "queryType": "general_financial",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:50.766Z"
+    },
+    {
+      "testName": "Asset Detection: Silver investment",
+      "passed": false,
+      "details": {
+        "expectedAsset": "Silver",
+        "detectedTitle": "📊 Visa Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:50.880Z"
+    },
+    {
+      "testName": "Asset Detection: S&P 500 performance",
+      "passed": false,
+      "details": {
+        "expectedAsset": "S&P 500",
+        "detectedTitle": "📊 Mastercard Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:55.137Z"
+    },
+    {
+      "testName": "Asset Detection: QQQ analysis",
+      "passed": false,
+      "details": {
+        "expectedAsset": "QQQ",
+        "detectedTitle": "📊 Nasdaq Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:23:59.626Z"
+    },
+    {
+      "testName": "Asset Detection: SPY trends",
+      "passed": false,
+      "details": {
+        "expectedAsset": "SPY",
+        "detectedTitle": "📊 S&P 500 Analysis",
+        "queryType": "asset",
+        "hasChart": true
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:04.743Z"
+    },
+    {
+      "testName": "Guardrail: \"How do I make pizza?\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:04.849Z"
+    },
+    {
+      "testName": "Guardrail: \"What's the weather today?\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:04.961Z"
+    },
+    {
+      "testName": "Guardrail: \"Best pizza recipe\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.064Z"
+    },
+    {
+      "testName": "Guardrail: \"How to cook pasta\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.179Z"
+    },
+    {
+      "testName": "Guardrail: \"Movie recommendations\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.296Z"
+    },
+    {
+      "testName": "Guardrail: \"Travel advice for Europe\"",
+      "passed": false,
+      "details": {
+        "title": "📊 Visa Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.419Z"
+    },
+    {
+      "testName": "Guardrail: \"How to fix my car\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.531Z"
+    },
+    {
+      "testName": "Guardrail: \"Programming tutorial\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.648Z"
+    },
+    {
+      "testName": "Guardrail: \"Exercise routine\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.766Z"
+    },
+    {
+      "testName": "Guardrail: \"Relationship advice\"",
+      "passed": true,
+      "details": {
+        "responseType": "guardrail",
+        "title": "🤝 I'm here to help with finance!"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.879Z"
+    },
+    {
+      "testName": "Chart Generation: Apple stock analysis",
+      "passed": true,
+      "details": {
+        "hasChart": true,
+        "chartType": "line",
+        "chartTitle": "Apple Price Movement"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:05.984Z"
+    },
+    {
+      "testName": "Chart Generation: Bitcoin price trends",
+      "passed": true,
+      "details": {
+        "hasChart": true,
+        "chartType": "line",
+        "chartTitle": "Bitcoin Price Movement"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:06.097Z"
+    },
+    {
+      "testName": "Chart Generation: Microsoft technical analysis",
+      "passed": true,
+      "details": {
+        "hasChart": true,
+        "chartType": "line",
+        "chartTitle": "Microsoft Price Movement"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:11.981Z"
+    },
+    {
+      "testName": "Chart Generation: Gold price movement",
+      "passed": true,
+      "details": {
+        "hasChart": true,
+        "chartType": "line",
+        "chartTitle": "Visa Price Movement"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:12.096Z"
+    },
+    {
+      "testName": "Chart Generation: Show me Tesla chart",
+      "passed": true,
+      "details": {
+        "hasChart": true,
+        "chartType": "line",
+        "chartTitle": "Tesla Price Movement"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:12.213Z"
+    },
+    {
+      "testName": "Portfolio Analysis Query",
+      "passed": false,
+      "details": {
+        "title": "📊 Ford Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:12.337Z"
+    },
+    {
+      "testName": "General Financial: \"What are the best dividend stocks?\"",
+      "passed": true,
+      "details": {
+        "topic": "High Dividend Yield Stocks"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:17.532Z"
+    },
+    {
+      "testName": "General Financial: \"Current market trends\"",
+      "passed": true,
+      "details": {
+        "topic": "Current Market Trends"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:17.649Z"
+    },
+    {
+      "testName": "General Financial: \"Investment strategies for beginners\"",
+      "passed": true,
+      "details": {
+        "topic": "Visa"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:17.759Z"
+    },
+    {
+      "testName": "General Financial: \"How to diversify my portfolio?\"",
+      "passed": true,
+      "details": {
+        "topic": "Visa"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:17.865Z"
+    },
+    {
+      "testName": "General Financial: \"Best growth stocks\"",
+      "passed": true,
+      "details": {
+        "topic": "Growth Stocks Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:22.016Z"
+    },
+    {
+      "testName": "General Financial: \"Cryptocurrency market analysis\"",
+      "passed": true,
+      "details": {
+        "topic": "Current Market Trends"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:22.135Z"
+    },
+    {
+      "testName": "General Financial: \"Risk management strategies\"",
+      "passed": true,
+      "details": {
+        "topic": "Risk Management Strategies"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:25.850Z"
+    },
+    {
+      "testName": "General Financial: \"Sector analysis today\"",
+      "passed": true,
+      "details": {
+        "responseType": "welcome",
+        "topic": null
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:25.969Z"
+    },
+    {
+      "testName": "General Financial: \"Economic indicators impact\"",
+      "passed": true,
+      "details": {
+        "responseType": "welcome",
+        "topic": null
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:26.079Z"
+    },
+    {
+      "testName": "General Financial: \"Interest rate effects on markets\"",
+      "passed": true,
+      "details": {
+        "topic": "Economic Indicators Impact"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:30.976Z"
+    },
+    {
+      "testName": "Fuzzy Match: \"Appel stock\" → Apple",
+      "passed": true,
+      "details": {
+        "query": "Appel stock",
+        "expected": "Apple",
+        "actualTitle": "📊 Apple Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:31.079Z"
+    },
+    {
+      "testName": "Fuzzy Match: \"Microsft analysis\" → Microsoft",
+      "passed": false,
+      "details": {
+        "query": "Microsft analysis",
+        "expected": "Microsoft",
+        "actualTitle": "📊 Ford Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:31.195Z"
+    },
+    {
+      "testName": "Fuzzy Match: \"Bitcon price\" → Bitcoin",
+      "passed": false,
+      "details": {
+        "query": "Bitcon price",
+        "expected": "Bitcoin",
+        "actualTitle": "👋 Welcome to FinanceBot Pro"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:31.310Z"
+    },
+    {
+      "testName": "Fuzzy Match: \"Teslas performance\" → Tesla",
+      "passed": true,
+      "details": {
+        "query": "Teslas performance",
+        "expected": "Tesla",
+        "actualTitle": "📊 Tesla Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:31.413Z"
+    },
+    {
+      "testName": "Fuzzy Match: \"Googel trends\" → Google",
+      "passed": true,
+      "details": {
+        "query": "Googel trends",
+        "expected": "Google",
+        "actualTitle": "📊 Google Analysis"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:36.088Z"
+    },
+    {
+      "testName": "Complexity Detection: \"Simple Apple analysis\"",
+      "passed": true,
+      "details": {
+        "query": "Simple Apple analysis",
+        "expectedComplexity": "low",
+        "note": "Complexity detection is internal"
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:39.297Z"
+    },
+    {
+      "testName": "Complexity Detection: \"Quick Bitcoin overview\"",
+      "passed": false,
+      "details": {},
+      "error": "Request failed with status code 429",
+      "timestamp": "2025-07-02T13:24:39.413Z"
+    },
+    {
+      "testName": "Complexity Detection: \"Detailed comprehensive Microsoft analysis\"",
+      "passed": false,
+      "details": {},
+      "error": "Request failed with status code 429",
+      "timestamp": "2025-07-02T13:24:39.415Z"
+    },
+    {
+      "testName": "Complexity Detection: \"In-depth technical analysis of Tesla\"",
+      "passed": false,
+      "details": {},
+      "error": "Request failed with status code 429",
+      "timestamp": "2025-07-02T13:24:39.416Z"
+    },
+    {
+      "testName": "Complexity Detection: \"Thorough examination of Gold markets\"",
+      "passed": false,
+      "details": {},
+      "error": "Request failed with status code 429",
+      "timestamp": "2025-07-02T13:24:39.417Z"
+    },
+    {
+      "testName": "Complexity Detection: \"Bitcoin analysis\"",
+      "passed": false,
+      "details": {},
+      "error": "Request failed with status code 429",
+      "timestamp": "2025-07-02T13:24:39.419Z"
+    },
+    {
+      "testName": "Error Handling: Empty message",
+      "passed": true,
+      "details": {
+        "errorStatus": 429,
+        "errorMessage": "Too many requests, please try again later."
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:39.421Z"
+    },
+    {
+      "testName": "Error Handling: Very long message",
+      "passed": true,
+      "details": {
+        "errorStatus": 429,
+        "errorMessage": "Too many requests, please try again later."
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:39.422Z"
+    },
+    {
+      "testName": "Error Handling: Missing sessionId",
+      "passed": true,
+      "details": {
+        "errorStatus": 429,
+        "errorMessage": "Too many requests, please try again later."
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:39.423Z"
+    },
+    {
+      "testName": "Error Handling: XSS attempt",
+      "passed": true,
+      "details": {
+        "errorStatus": 429,
+        "errorMessage": "Too many requests, please try again later."
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:39.425Z"
+    },
+    {
+      "testName": "Rate Limiting Protection",
+      "passed": true,
+      "details": {
+        "totalRequests": 10,
+        "successful": 1,
+        "rateLimited": 9
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.040Z"
+    },
+    {
+      "testName": "Performance: \"Apple stock analysis\"",
+      "passed": true,
+      "details": {
+        "responseTime": "2ms",
+        "threshold": "5000ms",
+        "cached": false
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.042Z"
+    },
+    {
+      "testName": "Performance: \"Bitcoin price trends\"",
+      "passed": true,
+      "details": {
+        "responseTime": "3ms",
+        "threshold": "5000ms",
+        "cached": false
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.162Z"
+    },
+    {
+      "testName": "Performance: \"What are the best dividend stocks?\"",
+      "passed": true,
+      "details": {
+        "responseTime": "4ms",
+        "threshold": "5000ms",
+        "cached": false
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.280Z"
+    },
+    {
+      "testName": "Performance: \"Microsoft performance\"",
+      "passed": true,
+      "details": {
+        "responseTime": "5ms",
+        "threshold": "5000ms",
+        "cached": false
+      },
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.399Z"
+    },
+    {
+      "testName": "Response Structure - Title",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.512Z"
+    },
+    {
+      "testName": "Response Structure - Summary",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Response Structure - Sections",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Response Structure - Action Items",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Response Structure - Key Metrics",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Chart Structure - Type",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Chart Structure - Title",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Chart Structure - Data",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Metadata Structure - Query Type",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Metadata Structure - Has Chart",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    },
+    {
+      "testName": "Metadata Structure - Timestamp",
+      "passed": true,
+      "details": {},
+      "error": null,
+      "timestamp": "2025-07-02T13:24:43.513Z"
+    }
+  ],
+  "recommendations": [
+    "⚠️ 14 tests failed. Review the following areas:",
+    "   • Asset Detection: 5 failed tests",
+    "   • Guardrail: 1 failed tests",
+    "   • Portfolio Analysis Query: 1 failed tests",
+    "   • Fuzzy Match: 2 failed tests",
+    "   • Complexity Detection: 5 failed tests",
+    "⚠️ Moderate success rate - investigate failed tests"
+  ]
+}
